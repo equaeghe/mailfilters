@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 """
-  A script that takes as stdin-input an rfc822-compliant message with
-  a 'multipart/alternative' part with one 'text/plain' and one 'text/html' part
-  and gives as stdout-output the same message, but with
+  alternative2.py: A script that takes as stdin-input an rfc822 compliant
+  message with a 'multipart/alternative' part with one 'text/plain' and
+  one 'text/html' part and gives as stdout-output the same message, but with
   the 'multipart/alternative' part replaced by either the 'text/plain' or
   the 'text/html' part. Which part will be output depends on the (symlink) name
   with which this script is called: if this name ends in 'plain',
