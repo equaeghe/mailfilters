@@ -1,11 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.4
 
 """
-  to7or8bit.py: A (currently not fully functional) script that takes
-  as stdin-input an rfc822 compliant message with parts that are encoded
-  as 'quoted-printable' or 'base64' and gives as stdout-output
-  the same message, but with those parts replaced by either '7bit' or '8bit'
-  transformations of themselves.
+  to7or8bit.py: A script that takes as stdin-input an rfc822 compliant message
+  with parts that are encoded as 'quoted-printable' or 'base64' and gives as
+  stdout-output the same message, but with those parts replaced by either
+  '7bit' or '8bit' transformations of themselves.
 
   Copyright (C) 2014 Erik Quaeghebeur
 
@@ -44,4 +43,4 @@ if len(msg.defects) > 0:
   raise Exception("An error occurred.")
 
 # Send the modified message to stdout
-print(msg.as_string()) # PROBLEM: as_string sometimes seems to encode parts as base64!
+print(msg.as_bytes().decode(encoding='UTF-8'))
