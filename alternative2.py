@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.4
 
 """
   alternative2.py: A script that takes as stdin-input an rfc822 compliant
@@ -40,7 +40,7 @@ if target == '':
   raise ValueError("Unknown scriptname '" + scriptname + "' requested.")
 
 # Read and parse the message from stdin
-msg = email.message_from_string(sys.stdin.read())
+msg = email.message_from_bytes(sys.stdin.buffer.read())
 
 # Check whether the message contains parts
 if not msg.is_multipart():
@@ -89,4 +89,5 @@ if len(msg.defects) + len(alt.defects) > 0:
   raise Exception("An error occurred.")
 
 # Send the modified message to stdout
-print(msg.as_string())
+msg.set_charset(email.charset.Charset('utf-8'))
+print(str(msg))

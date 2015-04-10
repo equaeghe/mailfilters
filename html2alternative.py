@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.4
 
 """
   html2alternative.py: A script that takes as stdin-input an rfc822 compliant
@@ -29,7 +29,7 @@ if len(sys.argv) is not 1:
   raise SyntaxError("This script takes no arguments, you gave " + nargs - 1 + ".")
 
 # Read and parse the message from stdin
-msg = email.message_from_string(sys.stdin.read())
+msg = email.message_from_bytes(sys.stdin.buffer.read())
 
 # Build the list of 'text/html' parts in the message
 htmls = []
@@ -68,4 +68,4 @@ if (len(msg.defects) + len(html_old.defects) + len(plain.defects)
   raise Exception("An error occurred.")
 
 # Send the modified message to stdout
-print(msg.as_string())
+print(str(msg))
