@@ -2,8 +2,8 @@
 
 """
   ansinew.py: A script that takes as stdin-input an rfc822 compliant message
-  with parts that are encoded in a 'utf-8' charset and gives as stdout-output
-  the same message, but with the charset replaced by 'windows-1252'.
+  that gives as stdout-output the same message, but with the charset replaced
+  by 'windows-1252'.
 
   Copyright (C) 2015 Erik Quaeghebeur
 
@@ -28,7 +28,7 @@ if len(sys.argv) is not 1:
 # Read and parse the message from stdin
 msg = email.message_from_bytes(sys.stdin.buffer.read())
 
-# Transform 'utf-8' to 'windows-1252'
+# Transform to 'windows-1252'
 msg.set_charset('windows-1252')
 
 # Check whether no errors were found in the message (parts)
