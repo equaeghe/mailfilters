@@ -6,7 +6,7 @@
   stdout-output the same message, but with those parts replaced by either
   '7bit' or '8bit' transformations of themselves.
 
-  Copyright (C) 2014 Erik Quaeghebeur
+  Copyright (C) 2015 Erik Quaeghebeur
 
   This program is free software: you can redistribute it and/or modify it under
   the terms of the GNU General Public License as published by the Free Software
@@ -27,7 +27,7 @@ if len(sys.argv) is not 1:
   raise SyntaxError("This script takes no arguments, you gave " + nargs - 1 + ".")
 
 # Read and parse the message from stdin
-msg = email.message_from_string(sys.stdin.read())
+msg = email.message_from_bytes(sys.stdin.buffer.read())
 
 # Transform 'quoted-printable' and 'base64' to '7bit' or '8bit'
 for part in msg.walk():
