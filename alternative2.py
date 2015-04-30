@@ -67,8 +67,8 @@ if len(parts) != 2:
 
 # Check whether the 'multipart/alternative' part contains one 'text/plain'
 # and one 'text/html' part
-if {part.get_content_type() for part in parts} != {'text/plain', 'text/html'}:
-  raise ValueError("Message does not contain the expected parts.")
+if 'text/' + target not in {part.get_content_type() for part in parts}:
+  raise ValueError("Message does not contain the target part.")
 
 # Remove material outside of the so-called 'MIME-harness'
 # of the single 'multipart/alternative' part
