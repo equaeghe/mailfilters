@@ -29,7 +29,9 @@ if len(sys.argv) is not 1:
 msg = email.message_from_bytes(sys.stdin.buffer.read())
 
 # Transform to 'utf-8'
-msg.set_charset('utf-8')
+for part in msg.walk():
+  if part.get_content_type() in {'text/plain', 'text/html'}:
+    part.set_charset('utf-8')
 
 # Check whether no errors were found in the message (parts)
 if len(msg.defects) > 0:
