@@ -83,11 +83,11 @@ for part in parts:
       del alt[header]
       alt[header] = value
     alt.set_payload(part.get_payload())
+    alt.set_charset(email.charset.Charset('utf-8'))
 
 # Check whether no errors were found in the message (parts)
 if len(msg.defects) + len(alt.defects) > 0:
   raise Exception("An error occurred.")
 
 # Send the modified message to stdout
-msg.set_charset(email.charset.Charset('utf-8'))
 print(str(msg))
