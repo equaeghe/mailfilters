@@ -48,7 +48,10 @@ if not msg.is_multipart():
 # Build the list of 'multipart/alternative' parts in the message
 alts = []
 for part in msg.walk():
-  if part.get_content_type() == 'multipart/alternative':
+  content_type = part.get_content_type()
+  if (content_type == 'multipart/alternative'
+      or (content_type == 'multipart/related'
+          and part.get_param('type') == 'multipart/alternative')):
     alts.append(part)
 
 # Check that there is only a single 'multipart/alternative' part in the message
