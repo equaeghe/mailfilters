@@ -2,15 +2,14 @@
 
 """
   alternative2.py: A script that takes as stdin-input an rfc822 compliant
-  message with a 'multipart/alternative' part with one 'text/plain' and
-  one 'text/html' part and gives as stdout-output the same message, but with
-  the 'multipart/alternative' part replaced by either the 'text/plain' or
-  the 'text/html' part. Which part will be output depends on the (symlink) name
-  with which this script is called: if this name ends in 'plain',
-  the 'text/plain' part is used, if this name ends in 'html',
-  the 'text/html' part is used.
+  message with a two-part 'multipart/alternative' part with 'text/plain' and/or
+  'text/html' parts and gives as stdout-output the same message, but with
+  the 'multipart/alternative' part replaced by either part. Which part will be
+  output depends on the (symlink) name with which this script is called: if
+  this name ends in 'plain', the (first) 'text/plain' part is used, if this
+  name ends in 'html', the (first) 'text/html' part is used.
 
-  Copyright (C) 2014 Erik Quaeghebeur
+  Copyright (C) 2015 Erik Quaeghebeur
 
   This program is free software: you can redistribute it and/or modify it under
   the terms of the GNU General Public License as published by the Free Software
@@ -65,8 +64,7 @@ parts = alt.get_payload()
 if len(parts) != 2:
   raise ValueError("Part does not contain the expected number of parts.")
 
-# Check whether the 'multipart/alternative' part contains one 'text/plain'
-# and one 'text/html' part
+# Check whether the 'multipart/alternative' part contains the target part
 if 'text/' + target not in {part.get_content_type() for part in parts}:
   raise ValueError("Message does not contain the target part.")
 
@@ -75,8 +73,7 @@ if 'text/' + target not in {part.get_content_type() for part in parts}:
 alt.preamble = ''
 alt.epilogue = ''
 
-# Replace the 'multipart/alternative' part by either the 'text/plain' or
-# the 'text/html' part
+# Replace the 'multipart/alternative' part by the *first* target part
 for part in parts:
   if part.get_content_type() == 'text/' + target:
     for header, value in part.items():
@@ -84,6 +81,7 @@ for part in parts:
       alt[header] = value
     alt.set_payload(part.get_payload())
     alt.set_charset(email.charset.Charset('utf-8'))
+    break
 
 # Check whether no errors were found in the message (parts)
 if len(msg.defects) + len(alt.defects) > 0:
