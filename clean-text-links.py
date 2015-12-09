@@ -31,17 +31,17 @@ if len(sys.argv) is not 1:
 msg = email.message_from_bytes(sys.stdin.buffer.read())
 
 # Prepare regexps
-plain = re.compile(r'([^<>]*)<(\1)>')
-href = re.compile(r'([^<>]*)<(http(s?)://\1)>')
-mailto = re.compile(r'([^<>]*)<mailto:(\1)>')
+plain = re.compile(rb'([^<>]*)<(\1)>')
+href = re.compile(rb'([^<>]*)<(http(s?)://\1)>')
+mailto = re.compile(rb'([^<>]*)<mailto:(\1)>')
 
 # Clean up link fragments
 for part in msg.walk():
   if part.get_content_type() == 'text/plain':
-    text = part.get_payload()
-    text = plain.sub(r'\2', text)
-    text = href.sub(r'\2', text)
-    text = mailto.sub(r'\2', text)
+    text = part.get_payload(decode=True)
+    text = plain.sub(rb'\2', text)
+    text = href.sub(rb'\2', text)
+    text = mailto.sub(rb'\2', text)
     part.set_payload(text)
 
 # Check whether no errors were found in the message (parts)
