@@ -90,6 +90,18 @@ for part in parts:
       del alt[header]
       alt[header] = value
     alt.set_payload(part.get_payload())
+        # replace(?) by
+        #
+        #   alt.set_payload(part.get_payload(), part.get_content_charset())
+        #
+        # to avoid the line below and current charset issues?
+        #
+        # Perhaps `print(str(msg))` will need to be modified
+        #
+        #   print(msg.as_bytes().decode(encoding=charset))
+        #
+        # where `charset = part.get_content_charset()` earlier.
+        #
     alt.set_charset(email.charset.Charset('utf-8'))
     break # makes sure only the first part is used
 
