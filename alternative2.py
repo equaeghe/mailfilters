@@ -6,10 +6,10 @@
   'text/<other>' parts and gives as stdout-output the same message, but with
   the 'multipart/alternative' part replaced by the target part. Which part will
   be output depends on the (symlink) name with which this script is called: if
-  this name ends in 'plain', the (first) 'text/plain' part is used, if this
-  name ends in 'html', the (first) 'text/html' part is used.
+  this name ends in 'plain', 'html', or 'calendar' the (first) such part is
+  used.
 
-  Copyright (C) 2015 Erik Quaeghebeur
+  Copyright (C) 2016 Erik Quaeghebeur
 
   This program is free software: you can redistribute it and/or modify it under
   the terms of the GNU General Public License as published by the Free Software
@@ -29,10 +29,10 @@ nargs = len(sys.argv)
 if len(sys.argv) is not 1:
   raise SyntaxError("This script takes no arguments, you gave " + nargs - 1 + ".")
 
-# Determine whether the 'text/plain' or the 'text/html' part should be used
+# Determine which text part should be used
 scriptname = sys.argv[0]
 target = ''
-for ending in {'plain', 'html'}:
+for ending in {'plain', 'html', 'calendar'}:
   if scriptname.endswith(ending):
     target = ending
 if target == '':
