@@ -31,9 +31,9 @@ if len(sys.argv) is not 1:
 msg = email.message_from_bytes(sys.stdin.buffer.read())
 
 # Prepare regexps
-plain = re.compile(rb'([^<>]*)<(\1)/?>')
-href = re.compile(rb'([^<>]*)<(http(s?)://\1)/?>')
-mailto = re.compile(rb'([^<>]*)<mailto:(\1)>')
+plain = re.compile(rb'([^<>]*)\s?(<(\1/?)>')
+href = re.compile(rb'([^<>]*)\s?<(http(s?)://\1/?)>')
+mailto = re.compile(rb'([^<>]*)\s?<mailto:(\1)>')
 
 # Clean up link fragments
 for part in msg.walk():
