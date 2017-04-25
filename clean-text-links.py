@@ -4,7 +4,8 @@
   clean-text-links.py: A script that takes as stdin-input an rfc822 compliant
   message that gives as stdout-output the same message, but in text/plain parts
   with fragments of the form foobar<mailto:foobar> replaced by foobar and
-  foobar<http(s)://foobar> replaced by http(s)://foobar.
+  foobar<http(s)://foobar> replaced by http(s)://foobar. Also deals with with
+  space before ‘<’ and with ‘<>’ in mailto's replaced by ‘[]’.
 
   Copyright (C) 2015 Erik Quaeghebeur
 
@@ -33,7 +34,7 @@ msg = email.message_from_bytes(sys.stdin.buffer.read())
 # Prepare regexps
 plain = re.compile(rb'([^<>]*)\s?<(\1/?)>')
 href = re.compile(rb'([^<>]*)\s?<(http(s?)://\1/?)>')
-mailto = re.compile(rb'([^<>]*)\s?<mailto:(\1)>')
+mailto = re.compile(rb'([^<>]*)\s?[<\[]mailto:(\1)[\]>]')
 
 # Clean up link fragments
 for part in msg.walk():
