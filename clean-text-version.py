@@ -3,11 +3,12 @@
 """
   clean-text-links.py: A script that takes as stdin-input an rfc822 compliant
   message that gives as stdout-output the same message, but in text/plain parts
-  with fragments of the form foobar<mailto:foobar> replaced by foobar and
+  with fragments of the form foobar<mailto:foobar> replaced by foobar,
   foobar<http(s)://foobar> replaced by http(s)://foobar. Also deals with with
-  space before ‘<’ and with ‘<>’ in mailto's replaced by ‘[]’.
+  space before ‘<’ and with ‘<>’ in mailto's replaced by ‘[]’. Furthermore also
+  cleans up some html leftovers, such as ‘&nbsp;’.
 
-  Copyright (C) 2015 Erik Quaeghebeur
+  Copyright (C) 2017 Erik Quaeghebeur
 
   This program is free software: you can redistribute it and/or modify it under
   the terms of the GNU General Public License as published by the Free Software
@@ -35,6 +36,7 @@ msg = email.message_from_bytes(sys.stdin.buffer.read())
 plain = re.compile(rb'([^<>]*)\s?<(\1/?)>')
 href = re.compile(rb'([^<>]*)\s?<(http(s?)://\1/?)>')
 mailto = re.compile(rb'([^<>]*)\s?[<\[]mailto:(\1)[\]>]')
+nbsp = re.compile(rb'(&nbsp;)')
 
 # Clean up link fragments
 for part in msg.walk():
@@ -43,6 +45,7 @@ for part in msg.walk():
     text = plain.sub(rb'\2', text)
     text = href.sub(rb'\2', text)
     text = mailto.sub(rb'\2', text)
+    text = nbsp.sub(' '.encode(), text)
     part.set_payload(text)
 
 # Check whether no errors were found in the message (parts)
