@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3
 
 """
   stdin-editor-stdout.py: A script that takes reads stdin into a temporary

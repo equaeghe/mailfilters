@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3
 
 """
   alternative2.py: A script that takes as stdin-input an rfc822 compliant
