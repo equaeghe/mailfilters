@@ -33,18 +33,16 @@ if len(sys.argv) is not 1:
 msg = email.message_from_bytes(sys.stdin.buffer.read())
 
 # Prepare regexps
-plain = re.compile(rb'([^<>]*)\s?<(\1/?)>')
-href = re.compile(rb'([^<>]*)\s?<(http(s?)://\1/?)>')
-mailto = re.compile(rb'([^<>]*)\s?[<\[]mailto:(\1)[\]>]')
+href = re.compile(rb'(?i)(?:https?://)?([^<>]*)\s*?<(https?://\1/?)>')
+mailto = re.compile(rb'(?i)([^<>]*)\s*?[<\[]mailto:\1[\]>]')
 nbsp = re.compile(rb'(&nbsp;)')
 
 # Clean up link fragments
 for part in msg.walk():
   if part.get_content_type() == 'text/plain':
     text = part.get_payload(decode=True)
-    text = plain.sub(rb'\2', text)
     text = href.sub(rb'\2', text)
-    text = mailto.sub(rb'\2', text)
+    text = mailto.sub(rb'\1', text)
     text = nbsp.sub(' '.encode(), text)
     part.set_payload(text)
 
