@@ -7,7 +7,7 @@
   'text/html' and a new 'text/plain' part encapsulated in a
   'multipart/alternative' part.
 
-  Copyright (C) 2014 Erik Quaeghebeur
+  Copyright (C) 2018 Erik Quaeghebeur
 
   This program is free software: you can redistribute it and/or modify it under
   the terms of the GNU General Public License as published by the Free Software
@@ -52,7 +52,9 @@ html_new = email.mime.text.MIMEText(html_text, 'html')
 
 # Generate the 'text/plain' part
 plain_text = html2text.html2text(html_text)
-plain = email.mime.text.MIMEText(plain_text)
+plain = email.mime.text.MIMEText(plain_text.replace('&amp;', '&'))
+# html2text apparently doesn't convert &amp; to &, so we do it
+# there may be other things like this…
 
 # Create the 'multipart/alternative' part
 alt = email.mime.multipart.MIMEMultipart('alternative', None, [plain, html_new])
