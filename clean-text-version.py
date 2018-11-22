@@ -34,7 +34,7 @@ msg = email.message_from_bytes(sys.stdin.buffer.read())
 
 # Prepare regexps
 href = re.compile(rb'(?i)(?:https?://)?([^<>]*)\s*?<(https?://\1/?)>')
-mailto = re.compile(rb'(?i)([^<>]*)\s*?[<\[]mailto:\1[\]>]')
+mailto = re.compile(rb'(?i)([^<>]*)\s*?[<\[](?:mailto|sip|tel):\1[\]>]')
 nbsp = re.compile(rb'(&nbsp;)')
 
 # Clean up link fragments
