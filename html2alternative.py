@@ -51,7 +51,18 @@ html_text = html_old.get_payload(decode=True).decode()
 html_new = email.mime.text.MIMEText(html_text, 'html')
 
 # Generate the 'text/plain' part
-plain_text = html2text.html2text(html_text)
+parser = html2text.HTML2Text()
+parser.body_width = 0
+parser.single_line_break = True
+parser.unicode_snob = True
+parser.inline_links = False
+parser.open_quote = '“'
+parser.close_quote = '”'
+parser.emphasis_mark = '/'
+parser.strong_mark = '*'
+parser.images_to_alt = True
+parser.ignore_tables = True
+plain_text = parser.handle(html_text)
 plain = email.mime.text.MIMEText(plain_text.replace('&amp;', '&'))
 # html2text apparently doesn't convert &amp; to &, so we do it
 # there may be other things like this…
