@@ -5,10 +5,10 @@
   message that gives as stdout-output the same message, but in text/plain parts
   with fragments of the form foobar<mailto:foobar> replaced by foobar,
   foobar<http(s)://foobar> replaced by http(s)://foobar. Also deals with with
-  space before ‘<’ and with ‘<>’ in mailto's replaced by ‘[]’. Furthermore also
-  cleans up some html leftovers, such as ‘&nbsp;’.
+  spaces before and after ‘<’, and ‘>’ and with ‘<>’ in replaced by ‘[]’ or
+  ‘()’. Furthermore also cleans up some html leftovers, such as ‘&nbsp;’.
 
-  Copyright (C) 2017 Erik Quaeghebeur
+  Copyright (C) 2019 Erik Quaeghebeur
 
   This program is free software: you can redistribute it and/or modify it under
   the terms of the GNU General Public License as published by the Free Software
@@ -33,8 +33,8 @@ if len(sys.argv) is not 1:
 msg = email.message_from_bytes(sys.stdin.buffer.read())
 
 # Prepare regexps
-href = re.compile(rb'(?i)(?:https?://)?([^<>]*)\s*?<(https?://\1/?)>')
-mailto = re.compile(rb'(?i)([^<>]*)\s*?[<\[](?:mailto|sip|tel):\1[\]>]')
+href = re.compile(rb'(?i)(?:https?://)?([^<>\[\]\(\)]*)\s*?[<\[\(]\s*?(https?://\1/?)\s*?[\)\]>]')
+mailto = re.compile(rb'(?i)([^<>\[\]\(\)]*)\s*?[<\[\(]\s*?(?:mailto|sip|tel):\1\s*?[\)\]>]')
 nbsp = re.compile(rb'(&nbsp;)')
 
 # Clean up link fragments
