@@ -23,6 +23,9 @@
 import sys
 import email
 import re
+from urllib.parse import unquote_to_bytes
+from quopri import encodestring
+
 
 # Check whether no arguments have been given to the script (it takes none)
 nargs = len(sys.argv)
@@ -33,14 +36,38 @@ if len(sys.argv) is not 1:
 msg = email.message_from_bytes(sys.stdin.buffer.read())
 
 # Prepare regexps
+# link rewriters
+outlook = re.compile(rb'(?i)https://\w+.safelinks\.protection\.outlook\.com/\?url=([^&]*)&\S*reserved=0')
+proofpoint = re.compile(rb'(?i)https://urldefense\.proofpoint\.com/v2/url\?u=([^=&]*)&\S*\s')
+# typical doublings
 href = re.compile(rb'(?i)(?:https?://)?([^<>\[\]\(\)]*)\s*?[<\[\(]\s*?(https?://\1/?)\s*?[\)\]>]')
-mailto = re.compile(rb'(?i)([^<>\[\]\(\)]*)\s*?[<\[\(]\s*?(?:mailto|sip|tel):\1\s*?[\)\]>]')
+mailto = re.compile(rb'(?i)[\'"]?([^<>\[\]\(\)\'"]*)[\'"]?\s*?[<\[\(]\s*?(?:mailto|sip|tel):\1\s*?[\)\]>]')
+# random stuff
 nbsp = re.compile(rb'(&nbsp;)')
+
+# Custom replacement functions
+def rewriter_fix(encoding, rewriter):
+    if encoding == 'quoted-printable':
+        encoder = encodestring
+    else:
+        encoder = lambda blob: blob
+        
+    def fixer(match):
+        link = match[1]
+        if rewriter == 'proofpoint':
+            link = link.replace(b'_', b'/').replace(b'-', b'%')
+        return encoder(unquote_to_bytes(link))
+    
+    return fixer
+
 
 # Clean up link fragments
 for part in msg.walk():
   if part.get_content_type() == 'text/plain':
+    encoding = part['Content-Transfer-Encoding'].lower()
     text = part.get_payload(decode=True)
+    text = outlook.sub(rewriter_fix(encoding, 'outlook'), text)
+    text = proofpoint.sub(rewriter_fix(encoding, 'proofpoint'), text)
     text = href.sub(rb'\2', text)
     text = mailto.sub(rb'\1', text)
     text = nbsp.sub(' '.encode(), text)
