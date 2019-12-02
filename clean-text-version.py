@@ -41,7 +41,7 @@ outlook = re.compile(rb'(?i)https://\w+.safelinks\.protection\.outlook\.com/\?ur
 proofpoint = re.compile(rb'(?i)https://urldefense\.proofpoint\.com/v2/url\?u=([^=&]*)&\S*\s')
 # typical doublings
 href = re.compile(rb'(?i)(?:https?://)?([^<>\[\]\(\)]*)\s*?[<\[\(]\s*?(https?://\1/?)\s*?[\)\]>]')
-mailto = re.compile(rb'(?i)[\'"]?([^<>\[\]\(\)\'"]*)[\'"]?\s*?[<\[\(]\s*?(?:mailto|sip|tel):\1\s*?[\)\]>]')
+mailto = re.compile(rb'(?i)[\'"]?([^<>\[\]\(\)\'"]*)[\'"]?\s*?[<\[\(]\s*?(?:mailto:|sip:|tel:)?\1\s*?[\)\]>]')
 # random stuff
 nbsp = re.compile(rb'(&nbsp;)')
 
