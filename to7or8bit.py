@@ -24,23 +24,23 @@ import email
 # Check whether no arguments have been given to the script (it takes none)
 nargs = len(sys.argv)
 if len(sys.argv) is not 1:
-  raise SyntaxError("This script takes no arguments, you gave " + nargs - 1 + ".")
+    raise SyntaxError(f"This script takes no arguments, you gave {nargs - 1}.")
 
 # Read and parse the message from stdin
 msg = email.message_from_bytes(sys.stdin.buffer.read())
 
 # Transform 'quoted-printable' and 'base64' to '7bit' or '8bit'
 for part in msg.walk():
-  if part.get_content_maintype() == 'text':
-    if part['Content-Transfer-Encoding'] in {'quoted-printable', 'base64'}:
-      payload = part.get_payload(decode=True)
-      del part['Content-Transfer-Encoding']
-      part.set_payload(payload)
-      email.encoders.encode_7or8bit(part)
+    if part.get_content_maintype() == 'text':
+        if part['Content-Transfer-Encoding'] in {'quoted-printable', 'base64'}:
+            payload = part.get_payload(decode=True)
+            del part['Content-Transfer-Encoding']
+            part.set_payload(payload)
+            email.encoders.encode_7or8bit(part)
 
 # Check whether no errors were found in the message (parts)
 if len(msg.defects) > 0:
-  raise Exception("An error occurred.")
+    raise Exception("An error occurred.")
 
 # Send the modified message to stdout
 print(msg.as_bytes().decode(encoding='UTF-8'))

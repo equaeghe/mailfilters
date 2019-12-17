@@ -23,19 +23,19 @@ import email
 # Check whether no arguments have been given to the script (it takes none)
 nargs = len(sys.argv)
 if len(sys.argv) is not 1:
-  raise SyntaxError("This script takes no arguments, you gave " + nargs - 1 + ".")
+    raise SyntaxError(f"This script takes no arguments, you gave {nargs - 1}.")
 
 # Read and parse the message from stdin
 msg = email.message_from_bytes(sys.stdin.buffer.read())
 
 # Transform to 'windows-1252'
 for part in msg.walk():
-  if part.get_content_type() in {'text/plain', 'text/html'}:
-    part.set_charset('windows-1252')
+    if part.get_content_type() in {'text/plain', 'text/html'}:
+        part.set_charset('windows-1252')
 
 # Check whether no errors were found in the message (parts)
 if len(msg.defects) > 0:
-  raise Exception("An error occurred.")
+    raise Exception("An error occurred.")
 
 # Send the modified message to stdout
 print(msg.as_bytes().decode(encoding='windows-1252'))

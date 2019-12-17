@@ -24,7 +24,7 @@ import email
 # Check whether no arguments have been given to the script (it takes none)
 nargs = len(sys.argv)
 if len(sys.argv) is not 1:
-    raise SyntaxError("This script takes no arguments, you gave " + nargs - 1 + ".")
+    raise SyntaxError(f"This script takes no arguments, you gave {nargs - 1}.")
 
 # Read and parse the message from stdin
 msg = email.message_from_bytes(sys.stdin.buffer.read())

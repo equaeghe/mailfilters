@@ -27,7 +27,7 @@ import email
 # Check whether no arguments have been given to the script (it takes none)
 nargs = len(sys.argv)
 if len(sys.argv) is not 1:
-    raise SyntaxError("This script takes no arguments, you gave " + nargs - 1 + ".")
+    raise SyntaxError(f"This script takes no arguments, you gave {nargs - 1}.")
 
 # Determine which text part should be used
 scriptname = sys.argv[0]
