@@ -29,53 +29,61 @@ from quopri import encodestring
 
 # Check whether no arguments have been given to the script (it takes none)
 nargs = len(sys.argv)
-if len(sys.argv) is not 1:
-  raise SyntaxError("This script takes no arguments, you gave " + nargs - 1 + ".")
+if len(sys.argv) != 1:
+    raise SyntaxError(f"This script takes no arguments, you gave {nargs - 1}.")
 
 # Read and parse the message from stdin
 msg = email.message_from_bytes(sys.stdin.buffer.read())
 
 # Prepare regexps
 # link rewriters
-outlook = re.compile(rb'(?i)https://\w+.safelinks\.protection\.outlook\.com/\?url=([^&]*)&\S*reserved=0')
-proofpoint = re.compile(rb'(?i)https://urldefense\.proofpoint\.com/v2/url\?u=([^=&]*)&\S*\s')
+outlook = re.compile(rb'(?i)https://\w+.safelinks\.protection\.outlook\.com/'
+                     rb'\?url=([^&]*)&\S*reserved=0')
+proofpoint = re.compile(rb'(?i)https://urldefense\.proofpoint\.com/v2/'
+                        rb'url\?u=([^=&]*)&\S*(?:(?= [^>\]\)])| ?)')
 # typical doublings
-href = re.compile(rb'(?i)(?:https?://)?([^<>\[\]\(\)]*)\s*?[<\[\(]\s*?(https?://\1/?)\s*?[\)\]>]')
-mailto = re.compile(rb'(?i)[\'"]?([^<>\[\]\(\)\'"]*)[\'"]?\s*?[<\[\(]\s*?(?:mailto:|sip:|tel:)?\1\s*?[\)\]>]')
+href = re.compile(rb'(?i)(?:https?://)?([^<>\[\]\(\)]+)\s*?'
+                  rb'[<\[\(] *?(https?://\1/?) *?[\)\]>]')
+mailto = re.compile(rb'(?i)[\'"]?([^<>\[\]\(\)\'"]+)[\'"]?\s*?'
+                    rb'[<\[\(] *?(?:mailto:|sip:|tel:)?\1 *?[\)\]>]')
 # random stuff
 nbsp = re.compile(rb'(&nbsp;)')
+
 
 # Custom replacement functions
 def rewriter_fix(encoding, rewriter):
     if encoding == 'quoted-printable':
         encoder = encodestring
     else:
-        encoder = lambda blob: blob
-        
+        def encoder(blob):
+            return blob
+
     def fixer(match):
         link = match[1]
         if rewriter == 'proofpoint':
             link = link.replace(b'_', b'/').replace(b'-', b'%')
         return encoder(unquote_to_bytes(link))
-    
+
     return fixer
 
 
 # Clean up link fragments
 for part in msg.walk():
-  if part.get_content_type() == 'text/plain':
-    encoding = part['Content-Transfer-Encoding'].lower()
-    text = part.get_payload(decode=True)
-    text = outlook.sub(rewriter_fix(encoding, 'outlook'), text)
-    text = proofpoint.sub(rewriter_fix(encoding, 'proofpoint'), text)
-    text = href.sub(rb'\2', text)
-    text = mailto.sub(rb'\1', text)
-    text = nbsp.sub(' '.encode(), text)
-    part.set_payload(text)
+    if part.get_content_type() == 'text/plain':
+        encoding = part['Content-Transfer-Encoding'].lower()
+        text = part.get_payload(decode=True)
+        del part['Content-Transfer-Encoding']
+        part['Content-Transfer-Encoding'] = '8bit'
+        text = outlook.sub(rewriter_fix(encoding, 'outlook'), text)
+        text = proofpoint.sub(rewriter_fix(encoding, 'proofpoint'), text)
+        text = href.sub(rb'\2', text)
+        text = mailto.sub(rb'\1', text)
+        text = nbsp.sub(' '.encode(), text)
+        part.set_payload(text.decode())
 
 # Check whether no errors were found in the message (parts)
 if len(msg.defects) > 0:
-  raise Exception("An error occurred.")
+    raise Exception("An error occurred.")
 
 # Send the modified message to stdout
-print(str(msg))
+print(msg)
