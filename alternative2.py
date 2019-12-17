@@ -24,9 +24,13 @@
 import sys
 import email
 
+
+ALTERNATIVE = 'multipart/alternative'
+RELATED = 'multipart/related'
+
 # Check whether no arguments have been given to the script (it takes none)
 nargs = len(sys.argv)
-if len(sys.argv) is not 1:
+if len(sys.argv) != 1:
     raise SyntaxError(f"This script takes no arguments, you gave {nargs - 1}.")
 
 # Determine which text part should be used
@@ -55,24 +59,25 @@ rels = []
 alts = []
 for part in msg.walk():
     content_type = part.get_content_type()
-    if (content_type == 'multipart/related'
-        and part.get_param('type') == 'multipart/alternative'):
+    if (content_type == RELATED and part.get_param('type') == ALTERNATIVE):
         rels.append(part)
         fix_main_content_type = True
-    if (content_type == 'multipart/alternative'):
+    if (content_type == ALTERNATIVE):
         alts.append(part)
 
 # Check that there is at most one 'multipart/related' part in the message
 if len(rels) > 1:
-    raise ValueError("Message does not contain at most one 'multipart/related' part.")
+    raise ValueError("Message does not contain at most "
+                     f"one '{RELATED}' part.")
 
 # Check that there is only a single 'multipart/alternative' part in the message
-if len(alts) is not 1:
-    raise ValueError("Message does not contain exactly one 'multipart/alternative' part.")
+if len(alts) != 1:
+    raise ValueError("Message does not contain exactly "
+                     f"one '{ALTERNATIVE}' part.")
 
 if fix_main_content_type:
-    rel = rels[0] # the message's single 'multipart/related' part
-alt = alts[0] # the message's single 'multipart/alternative' part
+    rel = rels[0]  # the message's single 'multipart/related' part
+alt = alts[0]  # the message's single 'multipart/alternative' part
 
 # Obtain the constituent subparts of the single 'multipart/alternative' part
 parts = alt.get_payload()
@@ -107,7 +112,7 @@ for part in parts:
         #
         if target.startswith('text'):
             alt.set_charset(email.charset.Charset('utf-8'))
-        break # makes sure only the first part is used
+        break  # makes sure only the first part is used
 
 # As necessary, fix the 'multipart/related' part
 if fix_main_content_type:

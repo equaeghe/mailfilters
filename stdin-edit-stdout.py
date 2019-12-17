@@ -28,5 +28,5 @@ filename = f.name
 f.close()
 subprocess.call(sys.argv[1:] + [filename])
 with open(filename) as f:
-  print(f.read())
+    print(f.read())
 os.remove(filename)
