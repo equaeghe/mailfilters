@@ -35,15 +35,15 @@ if len(sys.argv) != 1:
 
 # Determine which text part should be used
 scriptname = sys.argv[0]
-target = ''
+target = None
 for ending in {'plain', 'html', 'calendar'}:
     if scriptname.endswith(ending):
         target = "text/" + ending
 for ending in {'related', 'mixed'}:
     if scriptname.endswith(ending):
         target = "multipart/" + ending
-if target == '':
-    raise ValueError("Unknown scriptname '" + scriptname + "' requested.")
+if not target:
+    raise ValueError(f"Unknown scriptname '{scriptname}' requested.")
 
 # Read and parse the message from stdin
 msg = email.message_from_bytes(sys.stdin.buffer.read())
