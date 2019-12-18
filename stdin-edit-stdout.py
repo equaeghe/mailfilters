@@ -27,6 +27,6 @@ f.write(sys.stdin.buffer.read())
 filename = f.name
 f.close()
 subprocess.call(sys.argv[1:] + [filename])
-with open(filename) as f:
-    print(f.read())
+with open(filename, 'rb') as f:
+    sys.stdout.buffer.write(f.read())
 os.remove(filename)
