@@ -3,10 +3,10 @@
 """
   any2plain.py: A script that takes as stdin-input an rfc822 compliant message
   with any MIME structure containing a 'text/plain' part and gives as
-  stdout-output the same message, but with the whole body replaced by the first
+  stdout-output the same message, but with the whole body replaced by the main
   text/plain part.
 
-  Copyright (C) 2016 Erik Quaeghebeur
+  Copyright (C) 2019 Erik Quaeghebeur
 
   This program is free software: you can redistribute it and/or modify it under
   the terms of the GNU General Public License as published by the Free Software
@@ -20,6 +20,8 @@
 
 import sys
 import email
+import email.policy
+
 
 # Check whether no arguments have been given to the script (it takes none)
 nargs = len(sys.argv)
@@ -27,24 +29,28 @@ if len(sys.argv) != 1:
     raise SyntaxError(f"This script takes no arguments, you gave {nargs - 1}.")
 
 # Read and parse the message from stdin
-msg = email.message_from_bytes(sys.stdin.buffer.read())
+msg = email.message_from_bytes(sys.stdin.buffer.read(),
+                               policy=email.policy.SMTPUTF8)
 
 # Check whether the message contains parts
 if not msg.is_multipart():
     raise ValueError("Message does not contain any subparts.")
 
-# Find the first text/plain part and replace message payloads with its payload
-for part in msg.walk():
-    content_type = part.get_content_type()
-    if (content_type == 'text/plain'):
-        for header, value in part.items():
-            del msg[header]
-            msg[header] = value
-        msg.set_payload(part.get_payload())
+# Find the body text/plain part and replace message content with its content
+body = msg.get_body(('plain',))
+msg.clear_content()
+for header, value in body.items():
+    del msg[header]
+    msg[header] = value
+msg.set_content(body.get_content(),
+                charset=body.get_content_charset('utf-8'),
+                params=dict(body.get_params()),
+                cte='8bit')
+msg.set_param('charset', 'utf-8')
 
 # Check whether no errors were found in the message (parts)
 if len(msg.defects) > 0:
     raise Exception("An error occurred.")
 
 # Send the modified message to stdout
-print(str(msg))
+sys.stdout.buffer.write(msg.as_bytes(policy=email.policy.SMTPUTF8))
