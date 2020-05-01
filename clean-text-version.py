@@ -8,7 +8,7 @@
   spaces before and after ‘<’, and ‘>’ and with ‘<>’ in replaced by ‘[]’ or
   ‘()’. Furthermore also cleans up some html leftovers, such as ‘&nbsp;’.
 
-  Copyright (C) 2019 Erik Quaeghebeur
+  Copyright (C) 2020 Erik Quaeghebeur
 
   This program is free software: you can redistribute it and/or modify it under
   the terms of the GNU General Public License as published by the Free Software
@@ -37,10 +37,12 @@ msg = email.message_from_bytes(sys.stdin.buffer.read())
 
 # Prepare regexps
 # link rewriters
-outlook = re.compile(rb'(?i)https://\w+.safelinks\.protection\.outlook\.com/'
-                     rb'\?url=([^&]*)&\S*reserved=0')
-proofpoint = re.compile(rb'(?i)https://urldefense\.proofpoint\.com/v2/'
-                        rb'url\?u=([^=&]*)&\S*(?:(?= [^>\]\)])| ?)')
+outlook = re.compile(rb'(?i)https://\w+.safelinks\.protection\.outlook\.com/\?'
+                     rb'url=([^&]*)&\S*reserved=0')
+proofpoint = re.compile(rb'(?i)https://urldefense\.proofpoint\.com/v2/url\?'
+                        rb'u=([^=&]*)&\S*(?:(?= [^>\]\)])| ?)')
+outlook = re.compile(rb'(?i)https://protect3-qa\.fireeye\.com/v1/url\?.*'
+                     rb'u=([^>\s\]\)]+)')
 # typical doublings
 href = re.compile(rb'(?i)(?:https?://)?([^<>\[\]\(\)]+)\s*?'
                   rb'[<\[\(] *?(https?://\1/?) *?[\)\]>]')
