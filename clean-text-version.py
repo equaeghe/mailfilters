@@ -41,7 +41,7 @@ outlook = re.compile(rb'(?i)https://\w+.safelinks\.protection\.outlook\.com/\?'
                      rb'url=([^&]*)&\S*reserved=0')
 proofpoint = re.compile(rb'(?i)https://urldefense\.proofpoint\.com/v2/url\?'
                         rb'u=([^=&]*)&\S*(?:(?= [^>\]\)])| ?)')
-outlook = re.compile(rb'(?i)https://protect3-qa\.fireeye\.com/v1/url\?.*'
+fireeye = re.compile(rb'(?i)https://protect3-qa\.fireeye\.com/v1/url\?.*'
                      rb'u=([^>\s\]\)]+)')
 # typical doublings
 href = re.compile(rb'(?i)(?:https?://)?([^<>\[\]\(\)]+)\s*?'
@@ -78,6 +78,7 @@ for part in msg.walk():
         part['Content-Transfer-Encoding'] = '8bit'
         text = outlook.sub(rewriter_fix(encoding, 'outlook'), text)
         text = proofpoint.sub(rewriter_fix(encoding, 'proofpoint'), text)
+        text = fireeye.sub(rewriter_fix(encoding, 'fireeye'), text)
         text = href.sub(rb'\2', text)
         text = mailto.sub(rb'\1', text)
         text = nbsp.sub(' '.encode(), text)
