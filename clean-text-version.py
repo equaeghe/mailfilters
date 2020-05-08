@@ -73,6 +73,7 @@ def rewriter_fix(encoding, rewriter):
 for part in msg.walk():
     if part.get_content_type() == 'text/plain':
         encoding = part['Content-Transfer-Encoding'].lower()
+        charset = part.get_content_charset()
         text = part.get_payload(decode=True)
         del part['Content-Transfer-Encoding']
         part['Content-Transfer-Encoding'] = '8bit'
@@ -82,7 +83,7 @@ for part in msg.walk():
         text = href.sub(rb'\2', text)
         text = mailto.sub(rb'\1', text)
         text = nbsp.sub(' '.encode(), text)
-        part.set_payload(text.decode())
+        part.set_payload(text.decode(charset), charset='utf-8')
 
 # Check whether no errors were found in the message (parts)
 if len(msg.defects) > 0:
