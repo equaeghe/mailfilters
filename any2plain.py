@@ -28,9 +28,13 @@ nargs = len(sys.argv)
 if len(sys.argv) != 1:
     raise SyntaxError(f"This script takes no arguments, you gave {nargs - 1}.")
 
+# define email policy
+email_policy = email.policy.EmailPolicy(
+  max_line_length=None, linesep="\r\n", refold_source='none')
+
 # Read and parse the message from stdin
 msg = email.message_from_bytes(sys.stdin.buffer.read(),
-                               policy=email.policy.SMTPUTF8)
+                               policy=email_policy)
 
 # Check whether the message contains parts
 if not msg.is_multipart():
@@ -53,4 +57,4 @@ if len(msg.defects) > 0:
     raise Exception("An error occurred.")
 
 # Send the modified message to stdout
-sys.stdout.buffer.write(msg.as_bytes(policy=email.policy.SMTPUTF8))
+sys.stdout.buffer.write(msg.as_bytes(policy=email_policy))
