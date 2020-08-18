@@ -2,12 +2,10 @@
 
 """
   clean-text-links.py: A script that takes as stdin-input an rfc822 compliant
-  message that gives as stdout-output the same message, but in text/plain parts
-  with fragments of the form foobar<mailto:foobar> replaced by foobar,
-  foobar<http(s)://foobar> replaced by http(s)://foobar. Also deals with with
-  spaces before and after ‘<’, and ‘>’ and with ‘<>’ in replaced by ‘[]’ or
-  ‘()’. Furthermore also cleans up some html leftovers, such as ‘&nbsp;’.
-
+  message that gives as stdout-output the same message, but in text/plain
+  parts cleans up all kinds of link-related issues and html leftovers, such as
+  ‘&nbsp;’.
+  
   Copyright (C) 2020 Erik Quaeghebeur
 
   This program is free software: you can redistribute it and/or modify it under
@@ -22,9 +20,9 @@
 
 import sys
 import email
+import email.policy
 import re
-from urllib.parse import unquote_to_bytes
-from quopri import encodestring
+from urllib.parse import unquote
 
 
 # Check whether no arguments have been given to the script (it takes none)
@@ -32,39 +30,39 @@ nargs = len(sys.argv)
 if len(sys.argv) != 1:
     raise SyntaxError(f"This script takes no arguments, you gave {nargs - 1}.")
 
+# define email policy
+email_policy = email.policy.EmailPolicy(
+  max_line_length=None, linesep="\r\n", refold_source='none')
+
 # Read and parse the message from stdin
-msg = email.message_from_bytes(sys.stdin.buffer.read())
+msg = email.message_from_bytes(sys.stdin.buffer.read(), policy=email_policy)
 
 # Prepare regexps
 # link rewriters
-outlook = re.compile(rb'(?i)https://\w+.safelinks\.protection\.outlook\.com/\?'
-                     rb'url=([^&]*)&\S*reserved=0')
-proofpoint = re.compile(rb'(?i)https://urldefense\.proofpoint\.com/v2/url\?'
-                        rb'u=([^=&]*)&\S*(?:(?= [^>\]\)])| ?)')
-fireeye = re.compile(rb'(?i)https://protect3-qa\.fireeye\.com/v1/url\?.*'
-                     rb'u=([^>\s\]\)]+)')
+outlook = re.compile(r'(?i)https://\w+.safelinks\.protection\.outlook\.com/\?'
+                     r'url=([^&]*)&\S*reserved=0')
+proofpoint = re.compile(r'(?i)https://urldefense\.proofpoint\.com/v2/url\?'
+                        r'u=([^=&]*)&\S*(?:(?= [^>\]\)])| ?)')
+fireeye = re.compile(r'(?i)https://protect3-qa\.fireeye\.com/v1/url\?.*'
+                     r'u=([^>\s\]\)]+)')
 # typical doublings
-href = re.compile(rb'(?i)(?:https?://)?([^<>\[\]\(\)]+)\s*?'
-                  rb'[<\[\(] *?(https?://\1/?) *?[\)\]>]')
-mailto = re.compile(rb'(?i)[\'"]?([^<>\[\]\(\)\'"]+)[\'"]?\s*?'
-                    rb'[<\[\(] *?(?:mailto:|sip:|tel:)?\1 *?[\)\]>]')
+href = re.compile(r'(?i)(?:https?://)?([^<>\[\]\(\)]+)\s*?'
+                  r'[<\[\(] *?(https?://\1/?) *?[\)\]>]')
+mailto = re.compile(r'(?i)[\'"]?([^<>\[\]\(\)\'"]+)[\'"]?\s*?'
+                    r'[<\[\(] *?(?:mailto:|sip:|tel:)?\1 *?[\)\]>]')
 # random stuff
-nbsp = re.compile(rb'(&nbsp;)')
+nbsp = re.compile(r'&nbsp;')
 
 
 # Custom replacement functions
-def rewriter_fix(encoding, rewriter):
-    if encoding == 'quoted-printable':
-        encoder = encodestring
-    else:
-        def encoder(blob):
-            return blob
+
+def rewriter_fix(rewriter=None):
 
     def fixer(match):
         link = match[1]
         if rewriter == 'proofpoint':
-            link = link.replace(b'_', b'/').replace(b'-', b'%')
-        return encoder(unquote_to_bytes(link))
+            link = link.replace('_', '/').replace('-', '%')
+        return unquote(link)
 
     return fixer
 
@@ -72,22 +70,18 @@ def rewriter_fix(encoding, rewriter):
 # Clean up link fragments
 for part in msg.walk():
     if part.get_content_type() == 'text/plain':
-        encoding = part['Content-Transfer-Encoding'].lower()
-        charset = part.get_content_charset()
-        text = part.get_payload(decode=True)
-        del part['Content-Transfer-Encoding']
-        part['Content-Transfer-Encoding'] = '8bit'
-        text = outlook.sub(rewriter_fix(encoding, 'outlook'), text)
-        text = proofpoint.sub(rewriter_fix(encoding, 'proofpoint'), text)
-        text = fireeye.sub(rewriter_fix(encoding, 'fireeye'), text)
-        text = href.sub(rb'\2', text)
-        text = mailto.sub(rb'\1', text)
-        text = nbsp.sub(' '.encode(), text)
-        part.set_payload(text.decode(charset), charset='utf-8')
+        text = part.get_content()
+        text = outlook.sub(rewriter_fix(), text)
+        text = proofpoint.sub(rewriter_fix('proofpoint'), text)
+        text = fireeye.sub(rewriter_fix(), text)
+        text = href.sub(r'\2', text)
+        text = mailto.sub(r'\1', text)
+        text = nbsp.sub(' ', text)
+        part.set_content(text, cte='8bit')
 
 # Check whether no errors were found in the message (parts)
 if len(msg.defects) > 0:
     raise Exception("An error occurred.")
 
 # Send the modified message to stdout
-print(msg)
+sys.stdout.buffer.write(msg.as_bytes(policy=email_policy))
