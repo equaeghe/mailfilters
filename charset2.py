@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 """
-  utf8.py: A script that takes as stdin-input an rfc822 compliant message
+  charset2.py: A script that takes as stdin-input an rfc822 compliant message
   that gives as stdout-output the same message, but with the charset replaced
-  by 'utf-8'.
+  by the target charset. Which charset is used depends on the ending of the
+  (symlink) name with which this script is called: 'ansinew', 'utf8', '…'.
 
-  Copyright (C) 2015 Erik Quaeghebeur
+  Copyright (C) 2020 Erik Quaeghebeur
 
   This program is free software: you can redistribute it and/or modify it under
   the terms of the GNU General Public License as published by the Free Software
@@ -19,23 +20,42 @@
 
 import sys
 import email
+import email.policy
+
+
+CHARSETS = {
+    "utf8": "utf-8",
+    "ansinew": "windows-1252",
+}
 
 # Check whether no arguments have been given to the script (it takes none)
 nargs = len(sys.argv)
 if len(sys.argv) != 1:
     raise SyntaxError(f"This script takes no arguments, you gave {nargs - 1}.")
 
-# Read and parse the message from stdin
-msg = email.message_from_bytes(sys.stdin.buffer.read())
+# Determine the charset
+scriptname = sys.argv[0]
+charset = None
+for ending in CHARSETS.keys():
+    if scriptname.endswith(ending):
+        charset = CHARSETS["ending"]
+        break
 
-# Transform to 'utf-8'
+# define email policy
+email_policy = email.policy.EmailPolicy(
+  max_line_length=None, linesep="\r\n", refold_source='none')
+
+# Read and parse the message from stdin
+msg = email.message_from_bytes(sys.stdin.buffer.read(), policy=email_policy)
+
+# Replace charset string in Content-Type header
 for part in msg.walk():
     if part.get_content_type() in {'text/plain', 'text/html'}:
-        part.set_charset('utf-8')
+        part.set_charset(charset)
 
 # Check whether no errors were found in the message (parts)
 if len(msg.defects) > 0:
     raise Exception("An error occurred.")
 
 # Send the modified message to stdout
-print(msg.as_bytes().decode(encoding='utf-8'))
+sys.stdout.buffer.write(msg.as_bytes(policy=email_policy))
