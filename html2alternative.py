@@ -2,12 +2,11 @@
 
 """
   html2alternative.py: A script that takes as stdin-input an rfc822 compliant
-  message with a 'text/html' part (and no 'multipart/alternative' part) and
-  gives as stdout-output the same message, but with both the original
-  'text/html' and a new 'text/plain' part encapsulated in a
-  'multipart/alternative' part.
+  message with a 'text/html' part and gives as stdout-output the same message,
+  but with both the first 'text/html' and a new 'text/plain' part
+  encapsulated in a 'multipart/alternative' part.
 
-  Copyright (C) 2018 Erik Quaeghebeur
+  Copyright (C) 2020 Erik Quaeghebeur
 
   This program is free software: you can redistribute it and/or modify it under
   the terms of the GNU General Public License as published by the Free Software
@@ -21,8 +20,7 @@
 
 import sys
 import email
-import email.mime.text
-import email.mime.multipart
+import email.policy
 import html2text
 
 # Check whether no arguments have been given to the script (it takes none)
@@ -30,27 +28,24 @@ nargs = len(sys.argv)
 if len(sys.argv) != 1:
     raise SyntaxError(f"This script takes no arguments, you gave {nargs - 1}.")
 
-# Read and parse the message from stdin
-msg = email.message_from_bytes(sys.stdin.buffer.read())
+# define email policy
+email_policy = email.policy.EmailPolicy(
+  max_line_length=None, linesep="\r\n", refold_source='none')
 
-# Build the list of 'text/html' parts in the message
-htmls = []
+# Read and parse the message from stdin
+msg = email.message_from_bytes(sys.stdin.buffer.read(), policy=email_policy)
+
+# Find the first 'text/html' part
+replaceable = None
 for part in msg.walk():
     content_type = part.get_content_type()
-    if content_type == 'multipart/alternative':
-        raise ValueError("Message containts a 'multipart/alternative' part.")
     if content_type == 'text/html':
-        htmls.append(part)
+        replaceable = part
+        break
 
-# Check that there is only a single 'text/html' part in the message
-if len(htmls) != 1:
-    raise ValueError("Message does not contain exactly one 'text/html' part.")
-
-html_old = htmls[0]  # the message's single 'text/html' part
-
-# Obtain the actual html string and generate the 'text/html' part
-html_text = html_old.get_payload(decode=True).decode()
-html_new = email.mime.text.MIMEText(html_text, 'html')
+# Check that there is a 'text/html' part
+if not replaceable:
+    raise ValueError("Message does not contain a 'text/html' part.")
 
 # Generate the 'text/plain' part
 parser = html2text.HTML2Text()
@@ -64,24 +59,17 @@ parser.emphasis_mark = '/'
 parser.strong_mark = '*'
 parser.images_to_alt = True
 parser.ignore_tables = True
-plain_text = parser.handle(html_text)
-plain = email.mime.text.MIMEText(plain_text.replace('&amp;', '&'))
+plain = parser.handle(replaceable.get_content())
+plain = plain.replace('&amp;', '&')
 # html2text apparently doesn't convert &amp; to &, so we do it
 # there may be other things like this…
 
-# Create the 'multipart/alternative' part
-alt = email.mime.multipart.MIMEMultipart('alternative', None,
-                                         [plain, html_new])
-
-# Replace the 'text/html' part by the 'multipart/alternative' part
-html_old.set_payload(alt.get_payload())
-html_old.replace_header('Content-Type', alt['Content-Type'])
-del html_old['Content-Transfer-Encoding']
+# replace the html part by the 'multipart/alternative'
+replaceable.add_alternative(plain, cte='8bit')
 
 # Check whether no errors were found in the message (parts)
-if (len(msg.defects) + len(html_old.defects) + len(plain.defects)
-                     + len(html_new.defects) + len(alt.defects)) > 0:
+if len(msg.defects) + len(replaceable.defects) > 0:
     raise Exception("An error occurred.")
 
 # Send the modified message to stdout
-print(str(msg))
+sys.stdout.buffer.write(msg.as_bytes(policy=email_policy))
