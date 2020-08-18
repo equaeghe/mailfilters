@@ -4,12 +4,12 @@
   alternative2.py: A script that takes as stdin-input an rfc822 compliant
   message with a 'multipart/alternative' part with 'text/<target>' or
   'multipart/<target>' and/or other parts and gives as stdout-output the same
-  message, but with the 'multipart/alternative' part replaced by the target
-  part. Which part will be output depends on the (symlink) name with which this
-  script is called: if this name ends in 'plain', 'html', 'calendar',
-  'related', or 'mixed'  the (first) such part is used.
+  message, but with the first 'multipart/alternative' part replaced by the
+  first such target part. Which part will be output depends on the ending of
+  the (symlink) name with which this script is called: 'plain', 'html',
+  'calendar', 'related', or 'mixed'.
 
-  Copyright (C) 2016 Erik Quaeghebeur
+  Copyright (C) 2020 Erik Quaeghebeur
 
   This program is free software: you can redistribute it and/or modify it under
   the terms of the GNU General Public License as published by the Free Software
@@ -23,10 +23,11 @@
 
 import sys
 import email
+import email.policy
 
 
-ALTERNATIVE = 'multipart/alternative'
-RELATED = 'multipart/related'
+ALT = 'multipart/alternative'
+REL = 'multipart/related'
 
 # Check whether no arguments have been given to the script (it takes none)
 nargs = len(sys.argv)
@@ -45,82 +46,61 @@ for ending in {'related', 'mixed'}:
 if not target:
     raise ValueError(f"Unknown scriptname '{scriptname}' requested.")
 
+# define email policy
+email_policy = email.policy.EmailPolicy(
+  max_line_length=None, linesep="\r\n", refold_source='none')
+
 # Read and parse the message from stdin
-msg = email.message_from_bytes(sys.stdin.buffer.read())
+msg = email.message_from_bytes(sys.stdin.buffer.read(), policy=email_policy)
 
-# Check whether the message contains parts
+# Check whether the message is multipart
 if not msg.is_multipart():
-    raise ValueError("Message does not contain any subparts.")
+    raise ValueError("Message is not multipart.")
 
-# Build the list of 'multipart/alternative' parts in the message
-# Also keep track of whether it is the root part of a multipart/related part
+# Find the first 'multipart/alternative' part in the message
+# Also keep track of whether it is part of a multipart/related part
+alt = None
+container = msg
 fix_main_content_type = False
-rels = []
-alts = []
 for part in msg.walk():
-    content_type = part.get_content_type()
-    if (content_type == RELATED and part.get_param('type') == ALTERNATIVE):
-        rels.append(part)
+    if (part.get_content_type() == REL) and (part.get_param('type') == ALT):
+        container = part
         fix_main_content_type = True
-    if (content_type == ALTERNATIVE):
-        alts.append(part)
+        break
+for part in container.walk():
+    if (part.get_content_type() == ALT):
+        alt = part
+        break
 
-# Check that there is at most one 'multipart/related' part in the message
-if len(rels) > 1:
-    raise ValueError("Message does not contain at most "
-                     f"one '{RELATED}' part.")
+# Check that there is a 'multipart/alternative' part in the message
+if not alt:
+    raise ValueError(f"Message does not contain a '{ALT}' part.")
 
-# Check that there is only a single 'multipart/alternative' part in the message
-if len(alts) != 1:
-    raise ValueError("Message does not contain exactly "
-                     f"one '{ALTERNATIVE}' part.")
-
-if fix_main_content_type:
-    rel = rels[0]  # the message's single 'multipart/related' part
-alt = alts[0]  # the message's single 'multipart/alternative' part
-
-# Obtain the constituent subparts of the single 'multipart/alternative' part
-parts = alt.get_payload()
-
-# Check whether the 'multipart/alternative' part contains the target part
-if target not in {part.get_content_type() for part in parts}:
-    raise ValueError("Message does not contain the target part.")
-
-# Remove material outside of the so-called 'MIME-harness'
-# of the single 'multipart/alternative' part
-alt.preamble = ''
-alt.epilogue = ''
-
-# Replace the 'multipart/alternative' part by the *first* target part
-for part in parts:
+# Replace the 'multipart/alternative' part by the first target part
+target_missing = True
+for part in alt.iter_parts():
     if part.get_content_type() == target:
+        target_missing = False
+        alt.clear_content()
         for header, value in part.items():
-            del alt[header]
-            alt[header] = value
-        alt.set_payload(part.get_payload())
-        # replace(?) by
-        #
-        #   alt.set_payload(part.get_payload(), part.get_content_charset())
-        #
-        # to avoid the line below and current charset issues?
-        #
-        # Perhaps `print(str(msg))` will need to be modified
-        #
-        #   print(msg.as_bytes().decode(encoding=charset))
-        #
-        # where `charset = part.get_content_charset()` earlier.
-        #
-        if target.startswith('text'):
-            alt.set_charset(email.charset.Charset('utf-8'))
-        break  # makes sure only the first part is used
+            if header in alt:
+                alt.replace_header(header, value)
+            else:
+                alt.add_header(header, value)
+        alt.set_payload(part.get_payload(), part.get_content_charset())
+        break
+
+# Bail out in case the target was not found
+if target_missing:
+    raise ValueError(f"Message does not contain the target part ‘{target}’.")
 
 # As necessary, fix the 'multipart/related' part
 if fix_main_content_type:
-    rel.set_param('type', target)
+    container.set_param('type', target)
 
 # Check whether no errors were found in the message (parts)
-if len(msg.defects) + len(alt.defects) > 0:
+if len(msg.defects) + len(container.defects) + len(alt.defects) > 0:
     raise Exception("An error occurred.")
 
 # Send the modified message to stdout
-print(str(msg))
+sys.stdout.buffer.write(msg.as_bytes(policy=email_policy))
