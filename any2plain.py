@@ -6,7 +6,7 @@
   stdout-output the same message, but with the whole body replaced by the main
   text/plain part.
 
-  Copyright (C) 2019 Erik Quaeghebeur
+  Copyright (C) 2020 Erik Quaeghebeur
 
   This program is free software: you can redistribute it and/or modify it under
   the terms of the GNU General Public License as published by the Free Software
@@ -33,24 +33,21 @@ email_policy = email.policy.EmailPolicy(
   max_line_length=None, linesep="\r\n", refold_source='none')
 
 # Read and parse the message from stdin
-msg = email.message_from_bytes(sys.stdin.buffer.read(),
-                               policy=email_policy)
+msg = email.message_from_bytes(sys.stdin.buffer.read(), policy=email_policy)
 
 # Check whether the message contains parts
 if not msg.is_multipart():
     raise ValueError("Message does not contain any subparts.")
 
-# Find the body text/plain part and replace message content with its content
+# Find the body 'text/plain' part and replace message content with its content
 body = msg.get_body(('plain',))
 msg.clear_content()
 for header, value in body.items():
-    del msg[header]
-    msg[header] = value
-msg.set_content(body.get_content(),
-                charset=body.get_content_charset('utf-8'),
-                params=dict(body.get_params()),
-                cte='8bit')
-msg.set_param('charset', 'utf-8')
+    if header in msg:
+        msg.replace_header(header, value)
+    else:
+        msg.add_header(header, value)
+msg.set_payload(body.get_payload(), body.get_content_charset())
 
 # Check whether no errors were found in the message (parts)
 if len(msg.defects) > 0:
