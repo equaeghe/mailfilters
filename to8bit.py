@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 """
-  to7or8bit.py: A script that takes as stdin-input an rfc822 compliant message
+  to8bit.py: A script that takes as stdin-input an rfc822 compliant message
   with parts that are encoded as 'quoted-printable' or 'base64' and gives as
-  stdout-output the same message, but with those parts replaced by either
-  '7bit' or '8bit' transformations of themselves.
+  stdout-output the same message, but with those parts replaced by '8bit'
+  transformations of themselves.
 
-  Copyright (C) 2015 Erik Quaeghebeur
+  Copyright (C) 2020 Erik Quaeghebeur
 
   This program is free software: you can redistribute it and/or modify it under
   the terms of the GNU General Public License as published by the Free Software
@@ -20,27 +20,30 @@
 
 import sys
 import email
+import email.policy
+
 
 # Check whether no arguments have been given to the script (it takes none)
 nargs = len(sys.argv)
 if len(sys.argv) != 1:
     raise SyntaxError(f"This script takes no arguments, you gave {nargs - 1}.")
 
-# Read and parse the message from stdin
-msg = email.message_from_bytes(sys.stdin.buffer.read())
+# define email policy
+email_policy = email.policy.EmailPolicy(
+  max_line_length=None, linesep="\r\n", refold_source='none')
 
-# Transform 'quoted-printable' and 'base64' to '7bit' or '8bit'
+# Read and parse the message from stdin
+msg = email.message_from_bytes(sys.stdin.buffer.read(), policy=email_policy)
+
+# Transform 'quoted-printable' and 'base64' to '8bit'
 for part in msg.walk():
     if part.get_content_maintype() == 'text':
         if part['Content-Transfer-Encoding'] in {'quoted-printable', 'base64'}:
-            payload = part.get_payload(decode=True)
-            del part['Content-Transfer-Encoding']
-            part.set_payload(payload)
-            email.encoders.encode_7or8bit(part)
+            part.set_content(msg.get_content(), cte='8bit')
 
 # Check whether no errors were found in the message (parts)
 if len(msg.defects) > 0:
     raise Exception("An error occurred.")
 
 # Send the modified message to stdout
-print(msg.as_bytes().decode(encoding='UTF-8'))
+sys.stdout.buffer.write(msg.as_bytes(policy=email_policy))
