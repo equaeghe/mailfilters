@@ -5,7 +5,7 @@
   message that gives as stdout-output the same message, but in text/plain
   parts cleans up all kinds of link-related issues and html leftovers, such as
   ‘&nbsp;’.
-  
+
   Copyright (C) 2020 Erik Quaeghebeur
 
   This program is free software: you can redistribute it and/or modify it under
