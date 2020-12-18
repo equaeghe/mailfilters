@@ -50,7 +50,8 @@ if not replaceable:
 # Generate the 'text/plain' part
 parser = html2text.HTML2Text()
 parser.body_width = 0
-parser.single_line_break = True
+parser.links_each_paragraph = True
+#parser.single_line_break = True
 parser.unicode_snob = True
 parser.inline_links = False
 parser.open_quote = '“'
@@ -60,8 +61,12 @@ parser.strong_mark = '*'
 parser.images_to_alt = True
 parser.ignore_tables = True
 plain = parser.handle(replaceable.get_content())
-plain = plain.replace('&amp;', '&')
 # html2text apparently doesn't convert &amp; to &, so we do it
+plain = plain.replace('&amp;', '&')
+# html2text incorrectly escapes dashes and periods sometimes (\-, \.),
+# so we undo this, at the risk of removing true occurrences
+plain = plain.replace(r'\-', '-')
+plain = plain.replace(r'\.', '.')
 # there may be other things like this…
 
 # replace the html part by the 'multipart/alternative'
