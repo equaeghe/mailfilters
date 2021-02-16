@@ -40,7 +40,7 @@ msg = email.message_from_bytes(sys.stdin.buffer.read(), policy=email_policy)
 # Prepare regexps
 # link rewriters
 outlook = re.compile(r'(?i)https://\w+.safelinks\.protection\.outlook\.com/'
-                     r'[\w/-]*\?url=([^&]*)&\S*&reserved=0')
+                     r'[\w/-]*\?url=([^&]*)&\S*reserved=0')
 proofpoint2 = re.compile(r'(?i)https://urldefense\.proofpoint\.com/v2/url\?'
                          r'u=([^=&]*)&\S*(?:(?= [^>\]\)])| ?)')
 proofpoint3 = re.compile(r'(?i)https://urldefense\.com/v3/__(.*)__;!![^\$]*\$')
