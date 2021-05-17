@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.9
 
 """
   clean-text-links.py: A script that takes as stdin-input an rfc822 compliant
@@ -51,6 +51,21 @@ href = re.compile(r'(?i)(?:https?://)?([^<>\[\]\(\)]+)\s*?'
                   r'[<\[\(] *?(https?://\1/?) *?[\)\]>]')
 mailto = re.compile(r'(?i)[\'"]?([^<>\[\]\(\)\'"]+)[\'"]?\s*?'
                     r'[<\[\(] *?(?:mailto:|sip:|tel:)?\1 *?[\)\]>]')
+# warning notes
+TUEWARNING_plain = (
+    "[NOTE] You received an e-mail with an attachment from an external source. "
+    "This attachment might contain malicious code. Only open the attachment if "
+    "you are expecting this e-mail or know the sender. Don’t know the sender? "
+    "Forward the message as an attachment to "
+    "abuse@tue.nl<mailto:abuse@tue.nl>. Thanks in advance for your "
+    "cooperation. TU/e IMS Services.")
+TUEWARNING_markedup = (
+    "*[NOTE]* You received an e-mail with an attachment from an external "
+    "source. This attachment might contain malicious code. Only open the "
+    "attachment if you are expecting this e-mail or know the sender. Don’t "
+    "know the sender? Forward the message *as an attachment* to "
+    "abuse@tue.nl<mailto:abuse@tue.nl>. Thanks in advance for your "
+    "cooperation. TU/e IMS Services.")
 # random stuff
 nbsp = re.compile(r'&nbsp;')
 
@@ -72,6 +87,8 @@ def rewriter_fix(rewriter=None):
 for part in msg.walk():
     if part.get_content_type() == 'text/plain':
         text = part.get_content()
+        text = text.removeprefix(TUEWARNING_plain)
+        text = text.removeprefix(TUEWARNING_markedup)
         text = outlook.sub(rewriter_fix(), text)
         text = proofpoint2.sub(rewriter_fix('proofpoint2'), text)
         text = proofpoint3.sub(r'\1', text)
