@@ -66,6 +66,13 @@ TUEWARNING_markedup = (
     "know the sender? Forward the message *as an attachment* to "
     "abuse@tue.nl<mailto:abuse@tue.nl>. Thanks in advance for your "
     "cooperation. TU/e IMS Services.")
+TUEWARNING_markeddown = (
+    "*[NOTE]* You received an e-mail with an attachment from an external "
+    "source. This attachment might contain malicious code. Only open the "
+    "attachment if you are expecting this e-mail or know the sender. Don’t "
+    "know the sender? Forward the message *as an attachment* to "
+    "[abuse@tue.nl][1]. Thanks in advance for your cooperation. TU/e IMS "
+    "Services.\n\n   [1]: mailto:abuse@tue.nl\n")
 # random stuff
 nbsp = re.compile(r'&nbsp;')
 
@@ -89,6 +96,7 @@ for part in msg.walk():
         text = part.get_content()
         text = text.removeprefix(TUEWARNING_plain)
         text = text.removeprefix(TUEWARNING_markedup)
+        text = text.removeprefix(TUEWARNING_markeddown)
         text = outlook.sub(rewriter_fix(), text)
         text = proofpoint2.sub(rewriter_fix('proofpoint2'), text)
         text = proofpoint3.sub(r'\1', text)
