@@ -51,28 +51,16 @@ href = re.compile(r'(?i)(?:https?://)?([^<>\[\]\(\)]+)\s*?'
                   r'[<\[\(] *?(https?://\1/?) *?[\)\]>]')
 mailto = re.compile(r'(?i)[\'"]?([^<>\[\]\(\)\'"]+)[\'"]?\s*?'
                     r'[<\[\(] *?(?:mailto:|sip:|tel:)?\1 *?[\)\]>]')
-# warning notes
-TUEWARNING_plain = (
-    "[NOTE] You received an e-mail with an attachment from an external source. "
-    "This attachment might contain malicious code. Only open the attachment if "
-    "you are expecting this e-mail or know the sender. Don’t know the sender? "
-    "Forward the message as an attachment to "
-    "abuse@tue.nl<mailto:abuse@tue.nl>. Thanks in advance for your "
-    "cooperation. TU/e IMS Services.")
-TUEWARNING_markedup = (
-    "*[NOTE]* You received an e-mail with an attachment from an external "
-    "source. This attachment might contain malicious code. Only open the "
-    "attachment if you are expecting this e-mail or know the sender. Don’t "
-    "know the sender? Forward the message *as an attachment* to "
-    "abuse@tue.nl<mailto:abuse@tue.nl>. Thanks in advance for your "
-    "cooperation. TU/e IMS Services.")
-TUEWARNING_markeddown = (
-    "*[NOTE]* You received an e-mail with an attachment from an external "
-    "source. This attachment might contain malicious code. Only open the "
-    "attachment if you are expecting this e-mail or know the sender. Don’t "
-    "know the sender? Forward the message *as an attachment* to "
-    "[abuse@tue.nl][1]. Thanks in advance for your cooperation. TU/e IMS "
-    "Services.\n\n   [1]: mailto:abuse@tue.nl\n")
+# warning note
+tuewarning = re.compile(
+    r"\*?\[NOTE\]\*? You received an e-mail with an attachment from an "
+    r"external source\. This attachment might contain malicious code\. "
+    r"Only open the attachment if you are expecting this e-mail or know the "
+    r"sender\. Don’t know the sender\? "
+    r"Forward the message \*?as an attachment\*? to "
+    r"(abuse@tue\.nl(<mailto:abuse@tue\.nl>)?|\[abuse@tue\.nl\]\[\d\]). "
+    r"Thanks in advance for your cooperation\. "
+    r"TU/e IMS Services\.\n(\n   \[\d\]: mailto:abuse@tue\.nl\n)?")
 # random stuff
 nbsp = re.compile(r'&nbsp;')
 
@@ -94,9 +82,7 @@ def rewriter_fix(rewriter=None):
 for part in msg.walk():
     if part.get_content_type() == 'text/plain':
         text = part.get_content()
-        text = text.removeprefix(TUEWARNING_plain)
-        text = text.removeprefix(TUEWARNING_markedup)
-        text = text.removeprefix(TUEWARNING_markeddown)
+        text = tuewarning.sub('', text)
         text = outlook.sub(rewriter_fix(), text)
         text = proofpoint2.sub(rewriter_fix('proofpoint2'), text)
         text = proofpoint3.sub(r'\1', text)
