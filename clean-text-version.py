@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.9
+#!/usr/bin/env python3
 
 """
   clean-text-links.py: A script that takes as stdin-input an rfc822 compliant
