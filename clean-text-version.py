@@ -49,8 +49,8 @@ fireeye = re.compile(r'(?i)https://protect3-qa\.fireeye\.com/v1/url\?.*'
 # typical doublings
 href = re.compile(r'(?i)(?:https?://)?([^<>\[\]\(\)]+)\s*?'
                   r'[<\[\(] *?(https?://\1/?) *?[\)\]>]')
-mailto = re.compile(r'(?i)[\'"]?([^<>\[\]\(\)\'"]+)[\'"]?\s*?'
-                    r'[<\[\(] *?(?:mailto:|sip:|tel:)?\1 *?[\)\]>]')
+mailto = re.compile(r'(?i)([\'"]?)([^<>\[\]\(\)\'"]+)\1\s*?'
+                    r'[<\[\(] *?(?:mailto:|sip:|tel:)?\2 *?[\)\]>]')
 # warning note
 tuewarning = re.compile(
     r"\*?\[NOTE\]\*? You received an e-mail with an attachment from an "
@@ -88,7 +88,7 @@ for part in msg.walk():
         text = proofpoint3.sub(r'\1', text)
         text = fireeye.sub(rewriter_fix(), text)
         text = href.sub(r'\2', text)
-        text = mailto.sub(r'\1', text)
+        text = mailto.sub(r'\2', text)
         text = nbsp.sub(' ', text)
         part.set_content(text, cte='8bit')
 
