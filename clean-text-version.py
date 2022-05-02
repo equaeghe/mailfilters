@@ -58,7 +58,7 @@ tuewarning = re.compile(
     r"Only open the attachment if you are expecting this e-mail or know the "
     r"sender\. Don’t know the sender\? "
     r"Forward the message \*?as an attachment\*? to "
-    r"(abuse@tue\.nl(<mailto:abuse@tue\.nl>)?|\[abuse@tue\.nl\]\[\d\]). "
+    r"(abuse@tue\.nl(<mailto:abuse@tue\.nl>)?|\[abuse@tue\.nl\]\[\d\])\. "
     r"Thanks in advance for your cooperation\. "
     r"TU/e IMS Services\.\n(\n   \[\d\]: mailto:abuse@tue\.nl\n)?")
 # random stuff
