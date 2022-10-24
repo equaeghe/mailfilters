@@ -43,7 +43,7 @@ outlook = re.compile(r'(?i)https://\w+.safelinks\.protection\.outlook\.com/'
                      r'[\w/-]*\?url=([^&]*)&\S*reserved=0')
 proofpoint2 = re.compile(r'(?i)https://urldefense\.proofpoint\.com/v2/url\?'
                          r'u=([^=&]*)&\S*(?:(?= [^>\]\)])| ?)')
-proofpoint3 = re.compile(r'(?i)https://urldefense\.com/v3/__(.*)__;!![^\$]*\$')
+proofpoint3 = re.compile(r'(?i)https://urldefense\.com/v3/__(.*)__;[^\$]*\$')
 fireeye = re.compile(r'(?i)https://protect3-qa\.fireeye\.com/v1/url\?.*'
                      r'u=([^>\s\]\)]+)')
 # typical doublings
@@ -73,6 +73,8 @@ def rewriter_fix(rewriter=None):
         link = match[1]
         if rewriter == 'proofpoint2':
             link = link.replace('_', '/').replace('-', '%')
+        if rewriter == 'proofpoint3':
+            link = link.replace('*', '%')
         return unquote(link)
 
     return fixer
@@ -85,7 +87,7 @@ for part in msg.walk():
         text = tuewarning.sub('', text)
         text = outlook.sub(rewriter_fix(), text)
         text = proofpoint2.sub(rewriter_fix('proofpoint2'), text)
-        text = proofpoint3.sub(r'\1', text)
+        text = proofpoint3.sub(rewriter_fix('proofpoint3'), text)
         text = fireeye.sub(rewriter_fix(), text)
         text = href.sub(r'\2', text)
         text = mailto.sub(r'\2', text)
