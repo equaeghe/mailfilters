@@ -46,6 +46,8 @@ proofpoint2 = re.compile(r'(?i)https://urldefense\.proofpoint\.com/v2/url\?'
 proofpoint3 = re.compile(r'(?i)https://urldefense\.com/v3/__(.*)__;[^\$]*\$')
 fireeye = re.compile(r'(?i)https://protect3-qa\.fireeye\.com/v1/url\?.*'
                      r'u=([^>\s\]\)]+)')
+clicktime = re.compile(r'(?i)https://[\w-]+\.trendmicro\.com(?:\:443)?/wis/'
+                       r'clicktime/v1/query\?url=(.+)&umid=[\w-]+&auth=[\w-]+')
 # typical doublings
 href = re.compile(r'(?i)(?:https?://)?([^<>\[\]\(\)]+)\s*?'
                   r'[<\[\(] *?(https?://\1/?) *?[\)\]>]')
@@ -89,6 +91,7 @@ for part in msg.walk():
         text = proofpoint2.sub(rewriter_fix('proofpoint2'), text)
         text = proofpoint3.sub(rewriter_fix('proofpoint3'), text)
         text = fireeye.sub(rewriter_fix(), text)
+        text = clicktime.sub(rewriter_fix(), text)
         text = href.sub(r'\2', text)
         text = mailto.sub(r'\2', text)
         text = nbsp.sub(' ', text)
