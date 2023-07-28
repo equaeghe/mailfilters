@@ -62,7 +62,7 @@ tuewarning = re.compile(
     r"Forward the message \*?as an attachment\*? to "
     r"(abuse@tue\.nl(<mailto:abuse@tue\.nl>)?|\[abuse@tue\.nl\]\[\d\])\. "
     r"Thanks in advance for your cooperation\. "
-    r"TU/e IMS Services\.\n(\n   \[\d\]: mailto:abuse@tue\.nl\n)?")
+    r"TU/e LIS Services\.\n(\n   \[\d\]: mailto:abuse@tue\.nl\n)?")
 # random stuff
 nbsp = re.compile(r'&nbsp;')
 
