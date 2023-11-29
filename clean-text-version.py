@@ -64,6 +64,14 @@ tuewarning = re.compile(
     r"(abuse@tue\.nl(<mailto:abuse@tue\.nl>)?|\[abuse@tue\.nl\]\[\d\])\. "
     r"Thanks in advance for your cooperation\. "
     r"TU/e LIS Services\.\n(\n   \[\d\]: mailto:abuse@tue\.nl\n)?")
+exchangewarning_text = re.compile(
+    r"U ontvangt niet vaak e-mail van .*@.*\. "
+    r"Meer informatie over waarom dit belangrijk is"
+    r"<https://aka.ms/LearnAboutSenderIdentification>\n*")
+exchangewarning_html = re.compile(
+    r"U ontvangt niet vaak e-mail van .*@.*\. "
+    r"\[ Meer informatie over waarom dit belangrijk is\]\[1\](?:\s*\n)+"
+    r"\s*\[1\]: https://aka.ms/LearnAboutSenderIdentification\n*")
 # random stuff
 nbsp = re.compile(r'&nbsp;')
 
@@ -88,6 +96,8 @@ for part in msg.walk():
     if part.get_content_type() == 'text/plain':
         text = part.get_content()
         text = tuewarning.sub('', text)
+        text = exchangewarning_text.sub('', text)
+        text = exchangewarning_html.sub('', text)
         text = outlook.sub(rewriter_fix(), text)
         text = proofpoint2.sub(rewriter_fix('proofpoint2'), text)
         text = proofpoint3.sub(rewriter_fix('proofpoint3'), text)
