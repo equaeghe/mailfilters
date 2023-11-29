@@ -48,6 +48,7 @@ fireeye = re.compile(r'(?i)https://protect3-qa\.fireeye\.com/v1/url\?.*'
                      r'u=([^>\s\]\)]+)')
 clicktime = re.compile(r'(?i)https://[\w-]+\.trendmicro\.com(?:\:443)?/wis/'
                        r'clicktime/v1/query\?url=(.+)&umid=[\w-]+&auth=[\w-]+')
+vadesecure4 = re.compile(r'(?i)https://antiphishing.vadesecure.com/v4?.*u=(.*)')
 # typical doublings
 href = re.compile(r'(?i)(?:https?://)?([^<>\[\]\(\)]+)\s*?'
                   r'[<\[\(] *?(https?://\1/?) *?[\)\]>]')
@@ -91,6 +92,7 @@ for part in msg.walk():
         text = proofpoint2.sub(rewriter_fix('proofpoint2'), text)
         text = proofpoint3.sub(rewriter_fix('proofpoint3'), text)
         text = fireeye.sub(rewriter_fix(), text)
+        text = vadesecure4.sub(rewriter_fix(), text)
         text = clicktime.sub(rewriter_fix(), text)
         text = href.sub(r'\2', text)
         text = mailto.sub(r'\2', text)
