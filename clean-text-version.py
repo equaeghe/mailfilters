@@ -65,12 +65,11 @@ tuewarning = re.compile(
     r"Thanks in advance for your cooperation\. "
     r"TU/e LIS Services\.\n(\n   \[\d\]: mailto:abuse@tue\.nl\n)?")
 exchangewarning_text = re.compile(
-    r"U ontvangt niet vaak e-mail van .*@.*\. "
-    r"Meer informatie over waarom dit belangrijk is"
-    r"<https://aka.ms/LearnAboutSenderIdentification>\n*")
+    r"[A-Z][^\n]+ .*@.*\. "
+    r"[A-Z][^\n]+<https://aka\.ms/LearnAboutSenderIdentification>\n*")
 exchangewarning_html = re.compile(
-    r"U ontvangt niet vaak e-mail van .*@.*\. "
-    r"\[ Meer informatie over waarom dit belangrijk is\]\[1\](?:\s*\n)+"
+    r"[A-Z][^\n]+ .*@.*\. "
+    r"\[ [A-Z][^\n]+\]\[1\](?:\s*\n)+"
     r"\s*\[1\]: https://aka.ms/LearnAboutSenderIdentification\n*")
 # random stuff
 nbsp = re.compile(r'&nbsp;')
