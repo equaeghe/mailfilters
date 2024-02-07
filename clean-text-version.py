@@ -65,8 +65,10 @@ tuewarning = re.compile(
     r"Thanks in advance for your cooperation\. "
     r"TU/e LIS Services\.\n(\n   \[\d\]: mailto:abuse@tue\.nl\n)?")
 exchangewarning_text = re.compile(
-    r"\[?[A-Z]{0,1}[^\n]*.*@.*\. "
-    r"[A-Z][^\n]+<?https://aka\.ms/LearnAboutSenderIdentification>?\]?\n*")
+    r"\[?"
+    r"([A-Z][\w\s']* \S*@\S*\. [A-Z][^\n]+) "
+    r"(<?https://aka\.ms/LearnAboutSenderIdentification>?\s*)"
+    r"\]?\n*")
 exchangewarning_html = re.compile(
     r"[A-Z]{0,1}[^\n]*.*@.*\. "
     r"\[ [A-Z][^\n]+\]\[1\](?:\s*\n)+"
