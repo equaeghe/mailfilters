@@ -36,7 +36,7 @@ email_policy = email.policy.EmailPolicy(
 msg = email.message_from_bytes(sys.stdin.buffer.read(), policy=email_policy)
 
 # Prepare regexps
-spaces_at_line_end = re.compile(r"(?:(?<!--)|(?<!:))[  ]+(?=\n)")
+spaces_at_line_end = re.compile(r"(?<!--|.:)[  ]+(?=\n)")
 
 # Clean line endings
 for part in msg.walk():
