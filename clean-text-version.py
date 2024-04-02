@@ -55,15 +55,6 @@ href = re.compile(r'(?i)(?:https?://)?([^<>\[\]\(\)]+)\s*?'
 mailto = re.compile(r'(?i)([\'"]?)([^<>\[\]\(\)\'"]+)\1\s*?'
                     r'[<\[\(] *?(?:mailto:|sip:|tel:)?\2 *?[\)\]>]')
 # warning note
-tuewarning = re.compile(
-    r"\*?\[NOTE\]\*? You received an e-mail with an attachment from an "
-    r"external source\. This attachment might contain malicious code\. "
-    r"Only open the attachment if you are expecting this e-mail or know the "
-    r"sender\. Don’t know the sender\? "
-    r"Forward the message \*?as an attachment\*? to "
-    r"(abuse@tue\.nl(<mailto:abuse@tue\.nl>)?|\[abuse@tue\.nl\]\[\d\])\. "
-    r"Thanks in advance for your cooperation\. "
-    r"TU/e LIS Services\.\n(\n   \[\d\]: mailto:abuse@tue\.nl\n)?")
 exchangewarning_text = re.compile(
     r"\[?"
     r"([A-Z][\w\s'-]* \S*@\S*\. [A-Z][\w\s'-]+)\s*"
@@ -96,7 +87,6 @@ def rewriter_fix(rewriter=None):
 for part in msg.walk():
     if part.get_content_type() == 'text/plain':
         text = part.get_content()
-        text = tuewarning.sub('', text)
         text = exchangewarning_text.sub('', text)
         text = exchangewarning_html.sub('', text)
         text = outlook.sub(rewriter_fix(), text)
