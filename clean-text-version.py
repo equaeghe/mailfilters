@@ -71,7 +71,7 @@ exchangewarning_text = re.compile(
     r"\]?\n*")
 exchangewarning_html = re.compile(
     r"[A-Z]{0,1}[\w\s'-]*.*@.*\. "
-    r"\[ [A-Z][\w\s'-]+\]\[1\](?:\s*\n)+"
+    r"\[\s*[A-Z][\w\s'-]+\]\[1\](?:\s*\n)+"
     r"\s*\[1\]: https://aka.ms/LearnAboutSenderIdentification\n*")
 # random stuff
 nbsp = re.compile(r'&nbsp;')
