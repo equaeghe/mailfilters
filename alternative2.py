@@ -100,6 +100,12 @@ if fix_main_content_type:
 
 # Check whether no errors were found in the message (parts)
 if len(msg.defects) + len(container.defects) + len(alt.defects) > 0:
+    if len(msg.defects) > 0:
+        print("msg.defects", msg.defects)
+    if len(container.defects) > 0:
+        print("container.defects", container.defects)
+    if len(alt.defects) > 0:
+        print("alt.defects", alt.defects)
     raise Exception("An error occurred.")
 
 # Send the modified message to stdout
