@@ -22,6 +22,7 @@ import sys
 import email
 import email.policy
 import html2text
+import re
 
 # Check whether no arguments have been given to the script (it takes none)
 nargs = len(sys.argv)
@@ -69,6 +70,12 @@ plain = plain.replace('&amp;', '&')
 plain = plain.replace(r'\-', '-')
 plain = plain.replace(r'\.', '.')
 # there may be other things like this…
+
+# prepare cleanup regexps for common issues after conversion
+nbsp = re.compile(r'(\n\n[*/]? [*/]?)')
+
+# do cleanup using the regexps
+plain = nbsp.sub(r'\n\n', plain)
 
 # replace the html part by the 'multipart/alternative'
 replaceable.add_alternative(plain, cte='8bit')
