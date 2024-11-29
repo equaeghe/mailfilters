@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-  clean-text-links.py: A script that takes as stdin-input an rfc822 compliant
+  clean-line-endings.py: A script that takes as stdin-input an rfc822 compliant
   message that gives as stdout-output the same message, but in text/plain
   parts cleans spurious spaces in line endings.
 
