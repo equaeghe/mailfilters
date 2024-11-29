@@ -60,6 +60,7 @@ parser.emphasis_mark = '/'
 parser.strong_mark = '*'
 parser.images_to_alt = True
 parser.ignore_tables = True
+parser.use_automatic_links = True
 plain = parser.handle(replaceable.get_content())
 # html2text apparently doesn't convert &amp; to &, so we do it
 plain = plain.replace('&amp;', '&')
