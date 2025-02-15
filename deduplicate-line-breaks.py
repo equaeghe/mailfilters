@@ -36,15 +36,17 @@ email_policy = email.policy.EmailPolicy(
 msg = email.message_from_bytes(sys.stdin.buffer.read(), policy=email_policy)
 
 # Prepare regexps
-extra_br_needed = re.compile(r"(\s*\[\d+\]: .*\n\n)(?!\n)")
-to_deduplicate = re.compile(r"(\n\n)(?!\s*\[\d+\])")
+extra_br_needed = re.compile(r"((?:\s*\[\d+\]:|\*\w+:\*) .*\n\n)(?!\n)")
+to_deduplicate = re.compile(r"(\n){2}(?!\s*\[\d+\])")
+quote_to_deduplicate = re.compile(r"(\n>+ ){2}(?!\s*\[\d+\])")
 
 # Deduplicate line breaks
 for part in msg.walk():
     if part.get_content_type() == 'text/plain':
         text = part.get_content()
         text = extra_br_needed.sub(r"\1\n", text)
-        text = to_deduplicate.sub(r"\n", text)
+        text = to_deduplicate.sub(r"\1", text)
+        text = quote_to_deduplicate.sub(r"\1", text)
         part.set_content(text, cte='8bit')
 
 # Check whether no errors were found in the message (parts)
