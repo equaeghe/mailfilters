@@ -50,9 +50,9 @@ clicktime = re.compile(r'(?i)https://[\w-]+\.trendmicro\.com(?:\:443)?/wis/'
                        r'clicktime/v1/query\?url=(.+)&umid=[\w-]+&auth=[\w-]+')
 vadesecure4 = re.compile(r'(?i)https://antiphishing.vadesecure.com/v4?.*u=(.*)')
 # typical doublings
-href = re.compile(r'(?i)(?:https?://)?([^<>\[\]\(\)]+)\s*?'
+href = re.compile(r'(?i)(?:https?://)?([^<>\[\]\(\)]{3,})\s*?'
                   r'[<\[\(] *?(https?://\1/?) *?[\)\]>]')
-mailto = re.compile(r'(?i)([\'"]?)([^<>\[\]\(\)\'"]+)\1\s*?'
+mailto = re.compile(r'(?i)([\'"]?)([^<>\[\]\(\)\'"]{3,})\1\s*?'
                     r'[<\[\(] *?(?:mailto:|sip:|tel:)?\2 *?[\)\]>]')
 # warning note
 exchangewarning_text = re.compile(
