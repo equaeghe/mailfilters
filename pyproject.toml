@@ -1,0 +1,37 @@
+[project]
+name = "mailfilters"
+description = "My personal mail filter scripts"
+readme = "README.md"
+authors = [{ name = "Erik Quaeghebeur" }]
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+requires-python = ">=3.13"
+dependencies = [
+    "h2pmrt",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/equaeghe/mailfilters"
+Issues = "https://github.com/equaeghe/mailfilters/issues"
+
+[build-system]
+requires = ["setuptools>=77", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+
+[tool.setuptools]
+script-files = [
+    "alternative2",
+    "any2plain",
+    "charset2",
+    "clean_line_endings",
+    "clean_spamheaderspam",
+    "clean_text_version",
+    "deduplicate_line_breaks",
+    "html2alternative",
+    "multipart_get_part",
+    "stdin_edit_stdout",
+    "to8bit",
+]
