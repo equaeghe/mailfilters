@@ -1,0 +1,136 @@
+#!/usr/bin/env python3
+
+"""
+  attachments2moz-deleted.py: A script that takes as stdin-input an rfc822
+  compliant message and gives as stdout-output the same message, but with
+  every non-inline attachment part replaced by a small placeholder part
+  using the 'text/x-moz-deleted' content type that Thunderbird also uses for
+  this purpose (see
+  https://webextension-api.thunderbird.net/en/mv3/messages.html). Inline
+  parts (such as embedded logos) are left untouched, use `remove_inline` for
+  those.
+
+  Unlike Thunderbird, which marks its placeholder parts
+  'Content-Disposition: inline', this script marks them
+  'Content-Disposition: attachment', matching the disposition of what they
+  replace, so they do not get rendered inline by mail clients.
+
+  The placeholder part's structure is reverse-engineered from an actual
+  Thunderbird-produced example (see
+  https://bugzilla.mozilla.org/show_bug.cgi?id=679619#c5), as there does not
+  seem to be a written specification:
+
+    Content-Type: text/x-moz-deleted; name="Deleted: ECMA-357.pdf"
+    Content-Transfer-Encoding: 8bit
+    Content-Disposition: inline; filename="Deleted: ECMA-357.pdf"
+    X-Mozilla-Altered: AttachmentDeleted; date="Tue Sep 13 13:20:39 2011"
+
+    You deleted an attachment from this message. The original MIME headers
+    for the attachment were:
+    Content-Type: application/pdf;
+    name="ECMA-357.pdf"
+    Content-Transfer-Encoding: base64
+    Content-Disposition: attachment;
+    filename="ECMA-357.pdf"
+
+  Copyright (C) 2026 Erik Quaeghebeur
+
+  This program is free software: you can redistribute it and/or modify it under
+  the terms of the GNU General Public License as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option) any later
+  version. This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+  details. You should have received a copy of the GNU General Public License
+  along with this program. If not, see <http://www.gnu.org/licenses/>.
+"""
+
+import sys
+import email
+import email.policy
+from datetime import datetime, timezone
+
+
+# Check whether no arguments have been given to the script (it takes none)
+nargs = len(sys.argv)
+if len(sys.argv) != 1:
+    raise SyntaxError(f"This script takes no arguments, you gave {nargs - 1}.")
+
+# define email policy
+email_policy = email.policy.EmailPolicy(
+    max_line_length=None, linesep="\r\n", refold_source="none"
+)
+
+# Read and parse the message from stdin
+msg = email.message_from_bytes(sys.stdin.buffer.read(), policy=email_policy)
+
+# Headers of the original attachment part that are worth keeping a record of
+RECORDED_HEADERS = ("Content-Type", "Content-Transfer-Encoding",
+                     "Content-Disposition")
+
+# Timestamp used for the 'X-Mozilla-Altered' header, Thunderbird-style
+# (e.g., "Tue Sep 13 13:20:39 2011"), but in UTC to avoid depending on the
+# local timezone setting.
+now = datetime.now(timezone.utc).strftime("%a %b %d %H:%M:%S %Y")
+
+
+def original_headers_text(part):
+    """Render the recorded original MIME headers of `part` as plain text."""
+    lines = [
+        f"{header}: {part[header]}"
+        for header in RECORDED_HEADERS
+        if header in part
+    ]
+    return "\n".join(lines)
+
+
+def make_placeholder(part):
+    """Build a 'text/x-moz-deleted' placeholder part replacing `part`."""
+    filename = part.get_filename() or "attachment"
+    body = (
+        "This attachment was deleted by attachments2moz-deleted. "
+        "The original MIME headers for the attachment were:\n"
+        f"{original_headers_text(part)}\n"
+    )
+
+    placeholder = email.message.MIMEPart(policy=email_policy)
+    placeholder.set_content(body, cte="8bit")
+    del placeholder["Content-Type"]
+    placeholder.add_header(
+        "Content-Type", "text/x-moz-deleted", name=f"Deleted: {filename}"
+    )
+    placeholder.add_header(
+        "Content-Disposition", "attachment", filename=f"Deleted: {filename}"
+    )
+    placeholder.add_header("X-Mozilla-Altered", "AttachmentDeleted", date=now)
+
+    return placeholder
+
+
+def replace_attachments(container):
+    """Recursively replace non-inline attachment child parts of a multipart
+    container by 'text/x-moz-deleted' placeholders, leaving inline parts and
+    the parts making up the displayed body untouched."""
+    if not container.is_multipart():
+        return
+    replaced = []
+    for part in container.get_payload():
+        if part.is_multipart():
+            replace_attachments(part)
+            replaced.append(part)
+        elif part.get_content_disposition() == "attachment":
+            replaced.append(make_placeholder(part))
+        else:
+            replaced.append(part)
+    container.set_payload(replaced)
+
+
+# Replace non-inline attachments throughout the message
+replace_attachments(msg)
+
+# Check whether no errors were found in the message (parts)
+if any(len(part.defects) > 0 for part in msg.walk()):
+    raise Exception("An error occurred.")
+
+# Send the modified message to stdout
+sys.stdout.buffer.write(msg.as_bytes(policy=email_policy))

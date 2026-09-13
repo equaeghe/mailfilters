@@ -25,6 +25,7 @@ build-backend = "setuptools.build_meta"
 script-files = [
     "alternative2",
     "any2plain",
+    "attachments2moz-deleted",
     "charset2",
     "clean_line_endings",
     "clean_spamheaderspam",
@@ -32,6 +33,7 @@ script-files = [
     "deduplicate_line_breaks",
     "html2alternative",
     "multipart_get_part",
+    "remove_inline",
     "stdin_edit_stdout",
     "to8bit",
 ]
