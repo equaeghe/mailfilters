@@ -33,6 +33,7 @@ script-files = [
     "deduplicate_line_breaks",
     "html2alternative",
     "multipart_get_part",
+    "related2content",
     "remove_inline",
     "stdin_edit_stdout",
     "to8bit",
