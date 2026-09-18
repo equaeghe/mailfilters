@@ -64,6 +64,10 @@ email_policy = email.policy.EmailPolicy(
 # Read and parse the message from stdin
 msg = email.message_from_bytes(sys.stdin.buffer.read(), policy=email_policy)
 
+# Content type used for placeholder parts (also produced by Thunderbird),
+# parts of this type are left untouched by this script
+MOZ_DELETED = "text/x-moz-deleted"
+
 # Headers of the original attachment part that are worth keeping a record of
 RECORDED_HEADERS = ("Content-Type", "Content-Transfer-Encoding",
                      "Content-Disposition")
@@ -118,7 +122,10 @@ def replace_attachments(container):
         if part.is_multipart():
             replace_attachments(part)
             replaced.append(part)
-        elif part.get_content_disposition() == "attachment":
+        elif (
+            part.get_content_disposition() == "attachment"
+            and part.get_content_type() != MOZ_DELETED
+        ):
             replaced.append(make_placeholder(part))
         else:
             replaced.append(part)

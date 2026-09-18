@@ -23,6 +23,11 @@ import sys
 import email
 import email.policy
 
+# Content type used for placeholder parts (e.g. by attachments2moz-deleted,
+# also produced by Thunderbird), parts of this type are left untouched by
+# this script
+MOZ_DELETED = "text/x-moz-deleted"
+
 
 # Check whether no arguments have been given to the script (it takes none)
 nargs = len(sys.argv)
@@ -49,7 +54,10 @@ def prune_inline(container):
         if part.is_multipart():
             prune_inline(part)
             kept.append(part)
-        elif part.get_content_disposition() == "inline":
+        elif (
+            part.get_content_disposition() == "inline"
+            and part.get_content_type() != MOZ_DELETED
+        ):
             continue  # drop this inline part
         else:
             kept.append(part)
