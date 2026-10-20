@@ -22,7 +22,7 @@ import subprocess
 import sys
 import tempfile
 
-f = tempfile.NamedTemporaryFile(delete=False)
+f = tempfile.NamedTemporaryFile(suffix=".eml", delete=False)
 f.write(sys.stdin.buffer.read())
 filename = f.name
 f.close()
